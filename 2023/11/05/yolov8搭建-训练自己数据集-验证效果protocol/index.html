@@ -1,0 +1,998 @@
+
+
+<!DOCTYPE html>
+<html lang="zh-CN" data-default-color-scheme=auto>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/img/fluid.png">
+  <link rel="icon" href="/img/fluid.png">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="author" content="Yifan">
+  <meta name="keywords" content="">
+  
+    <meta name="description" content="本篇文章主要记录我自己在基于windows系统上搭建yolov8网络，并使用yolov8对自己的数据集进行训练，最终验证网络效果的整个过程。主要供自己回头参考查阅，避免遗忘。由于yolov8的源代码在不断更新优化，我这里以2023年10月下旬下载到的代码版本为准。本人非计算机相关专业，搭建网络还比较外行，如有疏漏之处，欢迎批评指正。 复现本文可能会用到两个额外的.py文件，传送门🚀 本文目录如下">
+<meta property="og:type" content="article">
+<meta property="og:title" content="yolov8搭建+训练自己数据集+验证效果protocol">
+<meta property="og:url" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/index.html">
+<meta property="og:site_name" content="Welcome to Yifan&#39;s World">
+<meta property="og:description" content="本篇文章主要记录我自己在基于windows系统上搭建yolov8网络，并使用yolov8对自己的数据集进行训练，最终验证网络效果的整个过程。主要供自己回头参考查阅，避免遗忘。由于yolov8的源代码在不断更新优化，我这里以2023年10月下旬下载到的代码版本为准。本人非计算机相关专业，搭建网络还比较外行，如有疏漏之处，欢迎批评指正。 复现本文可能会用到两个额外的.py文件，传送门🚀 本文目录如下">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107111731610.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107112010754.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107112046532.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107113905124.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107114100271.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107120138478.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107120218978.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107121354675.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107140809050.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107141130091.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107171633910.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/ad1796d0ce04371712800985f8820a9a.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/d04e0390f13e1d32a30fafdc9a352816.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/2c90b3deeb6f1c4aa6e6b41c67c8d43b.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231112151826192.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231112152230180.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/5f3c5b19b711235be649c3341ecd1c1b_720.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/f5acc9b795325fea5fb39f1421da19b1_720.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/34b155d4072e4e79bf6b53115a0c8019_720.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/fbfc7db268dd9120f1373a2492a18cd0.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/b44d67211975b77633af130a8ed1bd6b.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/77c98c319610108cc2c170a172e493fc.png">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/b80f19343de35fdc8ec9c54ab0e84be3.jpg">
+<meta property="og:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/3695e16849dc148233fdbbaff3ec2c43_720-9844592.jpg">
+<meta property="article:published_time" content="2023-11-05T02:44:29.000Z">
+<meta property="article:modified_time" content="2023-11-13T07:15:50.808Z">
+<meta property="article:author" content="Yifan">
+<meta property="article:tag" content="yolov8">
+<meta property="article:tag" content="Experiment protocol">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://silvia1999.github.io/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107111731610.png">
+  
+  
+  
+  <title>yolov8搭建+训练自己数据集+验证效果protocol - Welcome to Yifan&#39;s World</title>
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/twitter-bootstrap/4.6.1/css/bootstrap.min.css" />
+
+
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/github-markdown-css/4.0.0/github-markdown.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/hint.css/2.7.0/hint.min.css" />
+
+  <link  rel="stylesheet" href="https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css" />
+
+
+
+<!-- 主题依赖的图标库，不要自行修改 -->
+<!-- Do not modify the link that theme dependent icons -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_hj8rtnfg7um.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_lbnruvf0jn.css">
+
+
+<link  rel="stylesheet" href="/css/main.css" />
+
+
+  <link id="highlight-css" rel="stylesheet" href="/css/highlight.css" />
+  
+    <link id="highlight-css-dark" rel="stylesheet" href="/css/highlight-dark.css" />
+  
+
+
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    Fluid.ctx = Object.assign({}, Fluid.ctx)
+    var CONFIG = {"hostname":"silvia1999.github.io","root":"/","version":"1.9.5-a","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false,"scope":[]},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"left","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"code_language":{"enable":true,"default":"TEXT"},"copy_btn":true,"image_caption":{"enable":true},"image_zoom":{"enable":true,"img_url_replace":["",""]},"toc":{"enable":true,"placement":"right","headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"loading_img":"/img/loading.gif","onlypost":false,"offset_factor":2},"web_analytics":{"enable":false,"follow_dnt":true,"baidu":null,"google":{"measurement_id":null},"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null,"path":"window.location.pathname","ignore_local":false}},"search_path":"/local-search.xml","include_content_in_search":true};
+
+    if (CONFIG.web_analytics.follow_dnt) {
+      var dntVal = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+      Fluid.ctx.dnt = dntVal && (dntVal.startsWith('1') || dntVal.startsWith('yes') || dntVal.startsWith('on'));
+    }
+  </script>
+  <script  src="/js/utils.js" ></script>
+  <script  src="/js/color-schema.js" ></script>
+  
+
+
+  
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+
+<body>
+  
+
+  <header>
+    
+
+<div class="header-inner" style="height: 70vh;">
+  <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand" href="/">
+      <strong>Welcome to Yifan&#39;s world</strong>
+    </a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/">
+                <i class="iconfont icon-home-fill"></i>
+                <span>首页</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                <span>归档</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                <span>分类</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                <span>标签</span>
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/about/">
+                <i class="iconfont icon-user-fill"></i>
+                <span>关于</span>
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" target="_self" href="javascript:;" data-toggle="modal" data-target="#modalSearch" aria-label="Search">
+              <i class="iconfont icon-search"></i>
+            </a>
+          </li>
+          
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" target="_self" href="javascript:;" aria-label="Color Toggle">
+              <i class="iconfont icon-dark" id="color-toggle-icon"></i>
+            </a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+  
+
+<div id="banner" class="banner" parallax=true
+     style="background: url('/img/default.png') no-repeat center center; background-size: cover;">
+  <div class="full-bg-img">
+    <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+      <div class="banner-text text-center fade-in-up">
+        <div class="h2">
+          
+            <span id="subtitle" data-typed-text="yolov8搭建+训练自己数据集+验证效果protocol"></span>
+          
+        </div>
+
+        
+          
+  <div class="mt-3">
+    
+    
+      <span class="post-meta">
+        <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+        <time datetime="2023-11-05 10:44" pubdate>
+          2023年11月5日 上午
+        </time>
+      </span>
+    
+  </div>
+
+  <div class="mt-1">
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-chart"></i>
+        
+          9.8k 字
+        
+      </span>
+    
+
+    
+      <span class="post-meta mr-2">
+        <i class="iconfont icon-clock-fill"></i>
+        
+        
+        
+          82 分钟
+        
+      </span>
+    
+
+    
+    
+  </div>
+
+
+        
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+
+</div>
+
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+
+    </div>
+
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div id="board">
+          <article class="post-content mx-auto">
+            <h1 id="seo-header">yolov8搭建+训练自己数据集+验证效果protocol</h1>
+            
+            
+              <div class="markdown-body">
+                
+                <p>本篇文章主要记录我自己在基于windows系统上搭建yolov8网络，并使用yolov8对自己的数据集进行训练，最终验证网络效果的整个过程。主要供自己回头参考查阅，避免遗忘。由于yolov8的源代码在不断更新优化，我这里以2023年10月下旬下载到的代码版本为准。本人非计算机相关专业，搭建网络还比较外行，如有疏漏之处，欢迎批评指正。</p>
+<p>复现本文可能会用到两个额外的.py文件，<a target="_blank" rel="noopener" href="https://github.com/silvia1999/Necessary-code-for-preparation-of-deep-learning/tree/main">传送门🚀</a></p>
+<p>本文目录如下：</p>
+<ul>
+<li><p>第一部分 准备工作——配环境</p>
+<ul>
+<li>cuda+cudnn安装</li>
+<li>python+Anaconda安装</li>
+<li>下载Yolov8的源代码</li>
+<li>创建专属于yolov8的虚拟环境</li>
+</ul></li>
+<li><p>第二部分 训练自己的数据集</p>
+<ul>
+<li><p>数据集标注</p></li>
+<li><p>数据集分割</p></li>
+<li><p>采用CLI指令进行训练</p></li>
+</ul></li>
+<li><p>第三部分 验证网络训练的成果</p>
+<ul>
+<li><p>推理指令</p></li>
+<li><p>验证指令</p></li>
+<li><p>怎样看懂网络的训练结果</p></li>
+</ul></li>
+</ul>
+<h2 id="第一部分-准备工作配环境">第一部分 准备工作——配环境</h2>
+<h3 id="cuda和cudnn安装">cuda和cudnn安装</h3>
+<p>CUDA可以理解为用于操控电脑的显卡（英伟达的显卡，也可以理解成GPU）的一个可编程的接口。下载了CUDA后，才可以把代码传给GPU进行计算。而cudnn，我简单地把它理解成CUDA的一个补丁。</p>
+<p>下载CUDA前，需要首先了解电脑的显卡可以兼容的CUDA的版本。在搜索栏输入NVIDIA，打开NVIDIA控制面板。选择
+<strong><em>帮助--系统信息</em></strong> 打开系统信息窗口。选择
+<strong><em>组件</em></strong> 栏，定位到 <strong><em>NVIDIA CUDA XXXX
+driver</em></strong>
+其中的XXXX就是自己的电脑显卡所适配最高CUDA版本。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107111731610.png" srcset="/img/loading.gif" lazyload alt="NVIDIA控制面板">
+<figcaption aria-hidden="true">NVIDIA控制面板</figcaption>
+</figure>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107112010754.png" srcset="/img/loading.gif" lazyload alt="NVIDIA控制面板-组件栏">
+<figcaption aria-hidden="true">NVIDIA控制面板-组件栏</figcaption>
+</figure>
+<p>然后打开CUDA的官网，<a target="_blank" rel="noopener" href="https://developer.nvidia.com/cuda-toolkit">传送门🚀</a>
+点击download
+now。进去之后默认是最新的CUDA版本，如果电脑显卡不适配最新的版本或者自己不想用最新的版本，就在Resources里面选择
+<strong><em>Archive of Previous CUDA Releases</em></strong>
+，下载对应的版本。</p>
+<p>下载完成后右键exe文件，管理员身份运行，一步一步按照提示安装好即可。</p>
+<p>安装完成后，需要将CUDA的相关文件路径添加到环境变量。具体步骤为：</p>
+<ol type="1">
+<li>右键我的电脑，选择属性</li>
+<li>在右侧栏最后找到高级系统设置</li>
+<li>点击环境变量</li>
+<li>在用户变量一栏选中Path，单击编辑</li>
+<li>单击新建，将 <em>C:FilesGPU Computing Toolkit和 </em>_XXX*
+新建为环境变量。其中XXX为你的CUDA版本号。第二条路径为相对路径，需要按照自己安装CUDA的路径补充为绝对路径。</li>
+</ol>
+<p>完成以上步骤后，可以重启电脑，在cmd窗口中输入nvcc
+-V，可以验证CUDA是否安装成功，比查看CUDA的详细版本。以下是在我自己电脑上运行的结果</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">C</span>:\Users\XXX&gt;nvcc -V<br><span class="hljs-attribute">nvcc</span>: NVIDIA (R) Cuda compiler driver<br><span class="hljs-attribute">Copyright</span> (c) <span class="hljs-number">2005</span>-<span class="hljs-number">2021</span> NVIDIA Corporation<br><span class="hljs-attribute">Built</span> <span class="hljs-literal">on</span> Mon_May__3_19:<span class="hljs-number">41</span>:<span class="hljs-number">42</span>_Pacific_Daylight_Time_2021<br><span class="hljs-attribute">Cuda</span> compilation tools, release <span class="hljs-number">11</span>.<span class="hljs-number">3</span>, V11.<span class="hljs-number">3</span>.<span class="hljs-number">109</span><br><span class="hljs-attribute">Build</span> cuda_11.<span class="hljs-number">3</span>.r11.<span class="hljs-number">3</span>/compiler.<span class="hljs-number">29920130</span>_0<br></code></pre></td></tr></table></figure>
+<p>接下来就是安装cuDNN。cuDNN下载需要先注册账号，不过也不收费，就是麻烦一点注册一下就好。官网是：https://developer.nvidia.com/rdp/cudnn-download
+。然后注意下载与自己CUDA版本对应的cuDNN。点击 <strong><em>Archived cuDNN
+Releases</em></strong> 有更早的cuDNN版本，适配更老的CUDA。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107112046532.png" srcset="/img/loading.gif" lazyload alt="下载与CUDA版本对应的cuDNN">
+<figcaption aria-hidden="true">下载与CUDA版本对应的cuDNN</figcaption>
+</figure>
+<p>解压cuDNN后，将cuDNN文件夹中的bin、include和lib三个子文件夹复制到
+*C:FilesGPU Computing
+Toolkit对应的文件夹中。这一步操作可以参考下图。</p>
+<p>到此为止，CUDA和cuDNN就算是配置完成了。</p>
+<h3 id="python和anaconda安装">python和Anaconda安装</h3>
+<p>一般认为，需要训练Yolov8至少需要3.9的python，但也不需要太新的版本，避免不适配。直接在python的官网下载，<a target="_blank" rel="noopener" href="https://www.python.org/downloads/">传送门🚀</a>
+。下载完成后，按照提示一步一步安装即可。安装完成后，在
+<em>设置--应用和功能</em> 中搜索 <em>Python</em>
+，可以看到自己安装的对应版本，开始菜单中也可以看到 Python3.X
+，就是安装成功了。（我因为之前项目的需要，所以有多个版本的python，实际只需要下载一个就好。当然有多个的话也可以通过配置环境很简单的切换，不用担心打架。）</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107113905124.png" srcset="/img/loading.gif" lazyload alt="设置-应用与程序">
+<figcaption aria-hidden="true">设置-应用与程序</figcaption>
+</figure>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107114100271.png" srcset="/img/loading.gif" lazyload alt="开始菜单">
+<figcaption aria-hidden="true">开始菜单</figcaption>
+</figure>
+<p>Anaconda是非常重要的python包和环境管理器。相较于在命令行中以命令的形式去查看自己当前环境下的python包，anaconda以图形交互界面的形式，更适合大多数人开始配置自己的第一个python环境。除此之外，anaconda中还集成了各种python的编译环境，比如在线编译器jupyter
+notebook，轻量级编译spyder，适合工程项目的编译器pycharm（要钱），非常方便容易上手。</p>
+<p>直接在官网下载安装即可，官网甚至还有贴心的安装流程。<a target="_blank" rel="noopener" href="https://docs.anaconda.com/anaconda/install/">传送门🚀</a> 。</p>
+<p>安装完成后打开开始菜单，点击 <strong>Anaconda Navigator</strong>
+，即可打开anaconda的主界面，其中最上方的Applications
+on选择的是目前的环境。由于我们还没有设置，所以这边基于的是默认环境，即base。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107120138478.png" srcset="/img/loading.gif" lazyload alt="在开始菜单中点击Anaconda Navigator">
+<figcaption aria-hidden="true">在开始菜单中点击Anaconda
+Navigator</figcaption>
+</figure>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107120218978.png" srcset="/img/loading.gif" lazyload alt="Anaconda主界面">
+<figcaption aria-hidden="true">Anaconda主界面</figcaption>
+</figure>
+<h3 id="下载yolov8的源代码">下载Yolov8的源代码</h3>
+<p>直接在github搜索yolov8下载源代码即可。<a target="_blank" rel="noopener" href="https://github.com/ultralytics/ultralytics">传送门🚀</a>
+。这边解压后就暂时不需要改动了，下面在训练自己的数据集时再会有一些调整的步骤。</p>
+<h3 id="创建专属于yolov8的虚拟环境">创建专属于yolov8的虚拟环境</h3>
+<p>为什么需要创建专属的虚拟环境呢？因为在运行python程序的时候，需要导入许多不同的包（package），每个不同的程序所需要的包往往在版本上有差异，且很可能只兼容非常局限的几个版本号。如果我们把所有的包都安装在了base环境中，那么下一次你需要运行别的程序时，很可能就会面临十分麻烦的“卸载--重新下载--求证是否匹配”的过程。为了避免反复的检查和检验兼容性，我们倾向于对一个大的工程文件建立一个对应的虚拟环境。这个环境通常情况是专属于该工程文件的。</p>
+<p>我们在开始菜单中打开 <strong>Anaconda Prompt</strong>
+，并输入如下代码：</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107121354675.png" srcset="/img/loading.gif" lazyload alt="打开Anaconda Prompt">
+<figcaption aria-hidden="true">打开Anaconda Prompt</figcaption>
+</figure>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-comment"># 创建虚拟环境yolov8</span><br><span class="hljs-attribute">conda</span> create -n yolov8(这里可以是你给自己的虚拟环境去的名字) python==<span class="hljs-number">3</span>.<span class="hljs-number">9</span>(填你自己下载的python版本号)<br><br><span class="hljs-comment"># 激活虚拟环境yolov8</span><br><span class="hljs-attribute">conda</span> activate yolov8<br></code></pre></td></tr></table></figure>
+<p>由此，我们就创建并激活了基于python3.9的虚拟环境yolov8，接下来的python程序会默认在yolov8这个虚拟环境下运行。如果我们想退出或者删除这个虚拟环境，可以在Anaconda
+Prompt中输入以下代码：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs routeros"><span class="hljs-comment"># 退出当前的虚拟环境，回到base</span><br>conda deactivate<br><br><span class="hljs-comment"># 删除虚拟环境yolov8</span><br>conda <span class="hljs-built_in">remove</span> -n yolov8 --all<br></code></pre></td></tr></table></figure>
+<p>创建完虚拟环境yolov8后，我这边采用的IDE（intergated develop
+environment，集成开发环境）是Pycharm。你也可以选择其他自己喜欢的，主流的IDE各有专长，但核心功能都差不多。</p>
+<p>用Pycharm打开你解压后的yolov8源代码的主文件setup.py，其位置在
+<strong><em>Ultralytics-main.py</em></strong>
+，Pycharm会自动为你打开整个工程文件的目录。然后我们将这个工程文件的环境设置为我们刚刚创建的虚拟环境yolov8。首先打开
+<strong><em>文件--设置--项目：Setup.py--Python解释器</em></strong>
+在右侧栏点击添加解释器，选择添加本地解释器。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107140809050.png" srcset="/img/loading.gif" lazyload alt="在Pycharm中选择虚拟环境">
+<figcaption aria-hidden="true">在Pycharm中选择虚拟环境</figcaption>
+</figure>
+<p>然后点击 <strong><em>Virtualenv环境</em></strong>
+，环境选择现有，点击浏览。选择 <strong><em>...exe</em></strong>
+，即选中了你自己刚刚新建的虚拟环境，其中“..”是Anaconda的根目录，对应你自己选择的安装Anaconda的位置。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107141130091.png" srcset="/img/loading.gif" lazyload alt="选中yolov8虚拟环境">
+<figcaption aria-hidden="true">选中yolov8虚拟环境</figcaption>
+</figure>
+<p>选择完成后，会在自己代码框最上边看到提示：“不满足软件包要求”。这是因为我们只创建了虚拟环境，还没有配置对应的包。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231107171633910.png" srcset="/img/loading.gif" lazyload alt="不满足软件包要求的提示">
+<figcaption aria-hidden="true">不满足软件包要求的提示</figcaption>
+</figure>
+<p>在Pycharm的终端安装Yolo，下载对应的软件包。Yolo非常好的一点是，软件包都已经被开发者封装好了，我们不需要按照提示一个一个地去安装，直接安装一个yolo就可以下载所有需要的软件包。</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs cmake">pip <span class="hljs-keyword">install</span> ultralytics<br></code></pre></td></tr></table></figure>
+<p>安装完成后，稍等IDE加载一下，代码框顶部的“不满足软件包要求”就已经消失了。不过到这里还差最后一步才能最终完成环境配置——yolo自动为我们配置的torch是一个cpu版本的torch，我们需要手动卸载它，重新安装一个gpu版本的torch，这样我们的模型才能适应更复杂的任务。</p>
+<figure class="highlight coffeescript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs coffeescript"><span class="hljs-comment"># 在Python控制台中导入torch包，查看版本</span><br><span class="hljs-keyword">import</span> torch<br><span class="hljs-built_in">print</span>(torch.__version__)<br><br>&gt;&gt;<span class="hljs-number">2.1</span><span class="hljs-number">.0</span>+cpu<br></code></pre></td></tr></table></figure>
+<figure class="highlight nginx"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs nginx"><span class="hljs-comment"># 重新回到终端，我们首先卸载torch</span><br><br><span class="hljs-attribute">pip</span> uninstall torch<br></code></pre></td></tr></table></figure>
+<p>然后来到pytorch的官网，<a target="_blank" rel="noopener" href="https://pytorch.org">传送门🚀</a>
+。torch的版本需要与CUDA对应，如果自己的CUDA版本在首页没有展示，就点击
+<strong><em>Previous versions of PyTorch</em></strong>
+找到对应的版本。注意运行yolo最低需要1.8.0版本的torch，如果没有匹配的torch，则考虑升级CUDA。复制对应的代码到终端（我这边以1.12.1为例），即可完成安装。</p>
+<figure class="highlight apache"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><code class="hljs apache"><span class="hljs-attribute">conda</span> install pytorch==<span class="hljs-number">1</span>.<span class="hljs-number">12</span>.<span class="hljs-number">1</span> torchvision==<span class="hljs-number">0</span>.<span class="hljs-number">13</span>.<span class="hljs-number">1</span> torchaudio==<span class="hljs-number">0</span>.<span class="hljs-number">12</span>.<span class="hljs-number">1</span> cudatoolkit=<span class="hljs-number">11</span>.<span class="hljs-number">3</span> -c pytorch<br><br><span class="hljs-comment"># conda的指令有可能无法安装，可以换用pip（理论上conda与pip不能混用，但前面我们安装ultralytics时也使用的pip，所以这边可以试一下）</span><br><br><span class="hljs-attribute">pip</span> install torch==<span class="hljs-number">1</span>.<span class="hljs-number">12</span>.<span class="hljs-number">1</span>+cu113 torchvision==<span class="hljs-number">0</span>.<span class="hljs-number">13</span>.<span class="hljs-number">1</span>+cu113 torchaudio==<span class="hljs-number">0</span>.<span class="hljs-number">12</span>.<span class="hljs-number">1</span> --extra-index-url https://download.pytorch.org/whl/cu113<br></code></pre></td></tr></table></figure>
+<p>安装完成后，我们稍等片刻，观察到代码框上方的“不满足的软件包要求”消失。打开Python控制台，输入以下代码</p>
+<figure class="highlight stylus"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><code class="hljs stylus">import torch<br><span class="hljs-function"><span class="hljs-title">print</span><span class="hljs-params">(torch.__version__)</span></span><br>&gt;&gt; <span class="hljs-number">1.12</span>.<span class="hljs-number">1</span>+cu113<br><span class="hljs-function"><span class="hljs-title">print</span><span class="hljs-params">(torch.cuda.is_available()</span></span>)<br>&gt;&gt;True<br><span class="hljs-function"><span class="hljs-title">print</span><span class="hljs-params">(torch.cuda.device_count()</span></span>)<br>&gt;&gt;<span class="hljs-number">1</span><br></code></pre></td></tr></table></figure>
+<p>以上，True表明GPU可用，1表明我的设备有一个GPU。至此，虚拟环境配置完成。</p>
+<h2 id="第二部分-训练自己的数据集">第二部分 训练自己的数据集</h2>
+<h3 id="数据集标注">数据集标注</h3>
+<p>我这边使用的是labelme标注，除此之外还有很多其他的打标软件，总体大差不差。这里以labelme为例介绍。首先，在cmd窗口中安装labelme</p>
+<figure class="highlight cmake"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><code class="hljs cmake">pip <span class="hljs-keyword">install</span> labelme<br><br><span class="hljs-comment"># 直接输入labelme可以打开软件</span><br>labelme<br></code></pre></td></tr></table></figure>
+<p>打开后看到如下界面。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/ad1796d0ce04371712800985f8820a9a.png" srcset="/img/loading.gif" lazyload alt="labelme界面">
+<figcaption aria-hidden="true">labelme界面</figcaption>
+</figure>
+<p>可以讲需要打标注的图片全部放在一个img文件夹中，导入时直接选择
+<strong><em>Open dir</em></strong> 导入所有图片。然后点击左上角
+<strong><em>Edit--Create Rectangle</em></strong>
+添加矩形标注。（一些分割任务需要扣出目标主体，这部分我没有做过相关实验，不是很了解，可以另外查阅）。每添加好一个矩形标注后会弹出一个对话框，在
+<strong><em>Enter object label</em></strong> 中输入这类object的名字，在
+<strong><em>Group ID</em></strong>
+中输入编号。一张图中所有想要标注的都标注好以后，在右手边的File
+list中直接点击下一张图，弹出对话框要求保存为json文件，直接保存即可。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/d04e0390f13e1d32a30fafdc9a352816.png" srcset="/img/loading.gif" lazyload alt="labelme标注框">
+<figcaption aria-hidden="true">labelme标注框</figcaption>
+</figure>
+<p>这里要注意的是，经过我们的一些测试，labelme似乎不具备删除错误的label
+list功能（错误的矩形框是可以删的），其实也不影响，但看着很难受。这个软件还是要小心地使用。</p>
+<p>全部标注完成后，将img文件夹中所有的json文件复制到一个单独的文件夹，然后运行json2txt.py的代码，将json文件转换为txt文件，得到的txt文件如下。其中每行的第一个数字是种类标号（就是你自己设置的group
+ID），后四个数字分别是标定的锚框的中心x,y和高h宽w。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/2c90b3deeb6f1c4aa6e6b41c67c8d43b.png" srcset="/img/loading.gif" lazyload alt="标注好的txt文件">
+<figcaption aria-hidden="true">标注好的txt文件</figcaption>
+</figure>
+<h3 id="数据集分割">数据集分割</h3>
+<p>接下来我们将打好标签的txt文件和jpg文件区分出训练集、验证集和测试集。打开splitDataset.py，按照自己的路径修改好，运行即可。</p>
+<p>分割完数据集后，我们还差训练前的最后一步，即告诉网络我们训练、验证和测试所需要的图片都放在什么位置。“告诉网络位置”这一工作是通过一个.yaml文件实现的。首先，我们可以先看一下官方给出的COCO128数据集案例的yaml是如何编写的。打开
+<strong><em>../ultralytics/cfg/datasets/coco128.yaml</em></strong>
+。文件的具体内容如下图所示：</p>
+<p>可以看到，我们只需要编写yaml文件，分别标注清楚path和class
+name即可。由于运行网络时，支持用绝对路径读取yaml文件，因此yaml文件理论上可以放置在任何你喜欢的地方。不过为了方便管理，我这边建议和自己的dataset放置在一起。即一个dataset对应一个yaml，非常清晰。</p>
+<p>在Pycharm左侧的项目目录中，找到
+<strong><em>ultralytics/dataset/你自己给这个dataset取的名字</em></strong>
+，鼠标选中自己的这个dataset，右键，在新建中选中文件，填写完名字后加上__<em>.yaml</em>__
+即新建完成yaml文件。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231112151826192.png" srcset="/img/loading.gif" lazyload alt="新建yaml文件">
+<figcaption aria-hidden="true">新建yaml文件</figcaption>
+</figure>
+<p>新建完成后，模仿coco128的格式，书写号自己的yaml文件，就大功告成啦。如下是我写的一个简单的yaml文件的示例。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/image-20231112152230180.png" srcset="/img/loading.gif" lazyload alt="书写完成的yaml文件">
+<figcaption aria-hidden="true">书写完成的yaml文件</figcaption>
+</figure>
+<h3 id="采用cli指令进行训练">采用CLI指令进行训练</h3>
+<p>CLI，即command-line
+interface，命令行界面。Yolov8可以非常简单地使用一句CLI命令控制训练、验证和推理等多种工作。比如说，你想用yolov8进行训练，数据集用前面一部分已经构造好的yaml指向的数据集，那么你可以直接打开Pycharm的终端，输入：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">yolo detect train <span class="hljs-attribute">model</span>=yolov8n.pt <span class="hljs-attribute">data</span>=你的yaml文件存放路径 <span class="hljs-attribute">epochs</span>=100 <span class="hljs-attribute">imgsz</span>=640 <span class="hljs-attribute">resume</span>=<span class="hljs-literal">True</span> <span class="hljs-attribute">workers</span>=1<br></code></pre></td></tr></table></figure>
+<p>其中，detect代表执行的是检测的任务。除了检测外，yolov8还可以进行分类和分割等其他任务。train代表的是训练模式，除此之外还有验证模式、推理模式等其他模式。model即代表用的是哪一种scale的yolov8网络，yolov8提供了五种不同scale的网络。data即给网络你刚刚配置好的yaml文件，网络会根据你的yaml文件中的内容去找到所需要的data。epochs为训练论述，imgsz为图片大小。resume为True即支持中断续训，网络会自动存储过去训练中表现最好的一轮的参数和最后一轮的参数，方便中断后的继续训练。workers代表使用几个GPU，我这边因为只有一个GPU，所以填写为1。除此之外，还有很多可以调节修改的参数，具体参阅
+<strong><em>../ultralytics/cfg/default.yaml</em></strong>
+文档，该default.yaml文档罗列了所有可以手动控制的参数。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/5f3c5b19b711235be649c3341ecd1c1b_720.png" srcset="/img/loading.gif" lazyload alt="default.yaml文档">
+<figcaption aria-hidden="true">default.yaml文档</figcaption>
+</figure>
+<p>但需要注意的是，该文档其实相当于是说明书的作用，在你真正使用yolo时，控制yolo行为的事CLI命令和你传给yolo的那个自编写的yaml文档。因此，在default.yaml中修改是无效的。</p>
+<p>关于网络的scale，其实大多数简单任务（如分类，较简单的检测任务），只需要tiny的scale就已经足够，大scale，在训练速度变慢的同时，效果提升还很有限。对于较复杂的任务，则需要自己多尝试。网络的scale共有五种，从小到大依次为：<strong><em>n,
+s, m, l, x</em></strong>
+。网络往往在CLI命令输入后，再去网上下载对应scale的结构和初始参数。这样下载的速度非常慢。所以更好的方法是提前下载好所有可能用到的scale参数，然后在撰写CLI命令时用根目录路径或者绝对路径调用。下载参数<a target="_blank" rel="noopener" href="https://github.com/ultralytics/assets/releases">传送门🚀</a>
+。于是我们可以修改CLI命令为：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">yolo detect train <span class="hljs-attribute">model</span>=你的参数存放路径 <span class="hljs-attribute">data</span>=你的yaml文件存放路径 <span class="hljs-attribute">epochs</span>=100 <span class="hljs-attribute">imgsz</span>=640 <span class="hljs-attribute">resume</span>=<span class="hljs-literal">True</span> <span class="hljs-attribute">workers</span>=1<br></code></pre></td></tr></table></figure>
+<h2 id="第三部分-验证网络训练的成果">第三部分 验证网络训练的成果</h2>
+<h3 id="推理指令">推理指令</h3>
+<p>推理（predict）是指当网络训练完成后，用已训练好的网络去计算一个不知真值的任务。在下载的yolo源代码中，提供了两张经典的用于推理的图片，他们的存放路径是：<em>../ultralytics/assets/bus.jpg</em>
+和 <em>../ultralytics/assets/zi dane.jpg</em>
+。我们先用下载好的yolov8参数对这两张图进行推理试一下。</p>
+<p>在终端输入如下命令：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><code class="hljs routeros">yolo detect predict <span class="hljs-attribute">model</span>=yolov8n.pt <span class="hljs-attribute">conf</span>=0.25 <span class="hljs-attribute">source</span>=<span class="hljs-string">&#x27;ultralytics/assets/bus.jpg&#x27;</span><br><br>yolo detect predict <span class="hljs-attribute">model</span>=yolov8n.pt <span class="hljs-attribute">conf</span>=0.25 <span class="hljs-attribute">source</span>=<span class="hljs-string">&#x27;ultralytics/assets/zidane.jpg&#x27;</span><br></code></pre></td></tr></table></figure>
+<p>其中，conf=0.25代表置信度取0.25。运行的结果会自动储存在
+<strong><em>../runs/detect/predict</em></strong>
+文件夹中，我们可以打开文件夹查看结果。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/f5acc9b795325fea5fb39f1421da19b1_720.png" srcset="/img/loading.gif" lazyload alt="推理运行结果1">
+<figcaption aria-hidden="true">推理运行结果1</figcaption>
+</figure>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/34b155d4072e4e79bf6b53115a0c8019_720.png" srcset="/img/loading.gif" lazyload alt="推理运行结果2">
+<figcaption aria-hidden="true">推理运行结果2</figcaption>
+</figure>
+<p>由此我们看到，检测任务的推理其实就是一个“画上框，给出置信度”的过程。由于推理是将已经训练好的网络运用到新的数据集上，因此推理任务往往是缺乏真值的，也很难评估网络表现的优劣。如果我们希望网络对我们一个文件夹里所有的图片“画上检测框，给出置信度”，可以用如下命令：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">yolo detect predict <span class="hljs-attribute">model</span>=runs/detect/train7/weights/best.pt（填你想用于推理的网络的参数路径） <span class="hljs-attribute">source</span>=ultralytics/dataset/dataset-bf/test/images（填你想画上框的文件夹路径） <span class="hljs-attribute">conf</span>=0.497 <span class="hljs-attribute">save_txt</span>=<span class="hljs-literal">True</span> <span class="hljs-attribute">save_conf</span>=<span class="hljs-literal">True</span><br></code></pre></td></tr></table></figure>
+<p>当我们把save_txt设置为True时，网络画的框就会以
+<strong><em>类别标号--中心坐标1--中心坐标2--宽--高</em></strong>
+的形式保存在txt文件中。当我们把save_conf设置为True时，txt文件的每行第六个数字代表的是所画的框的置信度。关于置信度设置为多少，我们会在
+<strong><em>怎样看懂网络的训练结果</em></strong> 中解释。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/fbfc7db268dd9120f1373a2492a18cd0.png" srcset="/img/loading.gif" lazyload alt="save下来的txt文件，每行有六个数字">
+<figcaption aria-hidden="true">save下来的txt文件，每行有六个数字</figcaption>
+</figure>
+<h3 id="验证指令">验证指令</h3>
+<p>验证指令如下：</p>
+<figure class="highlight routeros"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><code class="hljs routeros">yolo detect val <span class="hljs-attribute">model</span>=runs/detect/train9/weights/best.pt（填你想用于验证的网络的参数路径） <span class="hljs-attribute">data</span>=ultralytics/dataset/dataset-bf/bf.yaml（训练时配置的数据集yaml文件的路径） <span class="hljs-attribute">conf</span>=0.367 <span class="hljs-attribute">split</span>=test <span class="hljs-attribute">save_hybrid</span>=<span class="hljs-literal">True</span><br></code></pre></td></tr></table></figure>
+<p>其中，split=test表明，我们分割出 <strong><em>bf.yaml</em></strong>
+配置文件中的test数据集用于验证网络的效果。
+save_hybrid=True表明，在验证过程中，将每个图片上锚框+置信度的标注存储下来。验证结果会自动存储在
+<strong><em>../runs/detect/val</em></strong> 文件夹中。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/b44d67211975b77633af130a8ed1bd6b.png" srcset="/img/loading.gif" lazyload alt="验证结果页面">
+<figcaption aria-hidden="true">验证结果页面</figcaption>
+</figure>
+<h3 id="怎样看懂网络的训练结果">怎样看懂网络的训练结果</h3>
+<p>训练完成后，网络会返回：混淆矩阵、Precision曲线、召回率曲线、Precision--召回率曲线、F1曲线、网络训练全过程中的误差下降/Precision上升/召回率上升的曲线、训练集图片标注锚框/置信度和训练好的网络表现最好的一轮的参数
+<strong><em>best.pt</em></strong> 和最后一轮的参数
+<strong><em>last.pt</em></strong>
+。关于这部分，我也是在网络零碎的看了一些资料。因此，简单介绍一下前5个结果。</p>
+<h4 id="混淆矩阵">混淆矩阵</h4>
+<p>关于混淆矩阵，可以查看下图。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/77c98c319610108cc2c170a172e493fc.png" srcset="/img/loading.gif" lazyload alt="混淆矩阵">
+<figcaption aria-hidden="true">混淆矩阵</figcaption>
+</figure>
+<p>如图所示，我们将实际为1，预测也为1的称为正确的正向预测（True
+positive, TP）；实际为0，预测也为0的称为正确的负向预测（True negative,
+TN）；实际为0，预测为1的称为错误的正向结果（False positive,
+FP）；实际为1，预测为0的称为错误的负向预测（False negative,
+FN）。混淆矩阵可以非常直观地观察到，网络是对哪一处的判断容易出错，从而影响了最后的整体结果。</p>
+<h4 id="precision-和召回率">Precision 和召回率</h4>
+<p>从混淆矩阵中，我们可以计算得到许多度量网络表现的指标。最直接的是Accuracy，计算的是网络能够判断正确的概率：
+<span class="math display">\[
+Accuracy=\frac{TP+TN}{TP+TN+FP+FN}
+\]</span></p>
+<p>但是Accuracy太简单了，我们无法得到网络更具体的错误原因。为了进一步细致分析网络的表现，于是有了Precision
+和召回率。（由于Precision和Accuracy的中文翻译太接近了，为了避免混淆，这里就用直接用英文表示了）。</p>
+<p>其中Precision的计算公式为： <span class="math display">\[
+Precision = \frac{TP}{TP+FP}
+\]</span> 召回率（Recall）的计算公式为： <span class="math display">\[
+Recall=\frac{TP}{FP+FN}
+\]</span>
+可以看到，Precision是用于评估在预测为1的类目中，网络判断错了多少。而召回率关注的是在实际为1的类目中，网络有多少没有识别出来。仔细思考，这两个指标关注的重点是截然相反的，因此也适用于不同的使用场景。比如说，我们要为刷脸支付平台提供一个可靠的神经网络，那么我们的网络就必须具有很高的precision。（即不能把别人的脸识别成你自己的脸，那将面临极大的风险！）但与之相比，召回率低一点并没有什么影响。（相信大家也都有过人脸识别不上要掀刘海摘眼镜的经历吧）。但如果我们要为一家公司提供一个神经网络，用于判断给哪些客户为潜在客户，并将该公司的广告投放到潜在用户的应用开屏中。那么我们的网络就被期待有很高的召回率，即真正的潜在客户都被投放了广告。与之相比，Precision低一些，即广告还投放到了一些非潜在客户的终端，这相对来说是无关紧要的。</p>
+<h4 id="precision--召回率曲线和f1指标">Precision--召回率曲线和F1指标</h4>
+<p>通过以上的介绍，相信大家也感觉到了，Precision和召回率实际上是一对相互矛盾量。如果追求其中一者的极好表现，那么势必引起另一者的剧烈下降。如何权衡这对trade-off量，我们有了F指标与F1指标。
+<span class="math display">\[
+F_\beta=(1+\beta^2)\frac{precision\cdot recall}{(\beta^2\cdot
+precision)+recall}
+\]</span></p>
+<p><span class="math display">\[
+F_1=\frac{2}{\frac{1}{precision}+\frac{1}{recall}}
+\]</span></p>
+<p><span class="math display">\[\beta\]</span>
+相当于权重，可以用于调控在F指标中precision和召回率的占比。当<span class="math inline">\(\beta\)</span>取1时，F指标即变为F1指标，F1指标相当于precision和召回率的调和平均，即在该类任务中，precision和召回率同当重要。F指标与F1指标的最佳值为1，最差值为0。在训练完成后，网络给了我们precision--召回率曲线和F1指标与置信度的曲线。</p>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/b80f19343de35fdc8ec9c54ab0e84be3.jpg" srcset="/img/loading.gif" lazyload alt="precision--召回率曲线">
+<figcaption aria-hidden="true">precision--召回率曲线</figcaption>
+</figure>
+<figure>
+<img src="/2023/11/05/yolov8%E6%90%AD%E5%BB%BA-%E8%AE%AD%E7%BB%83%E8%87%AA%E5%B7%B1%E6%95%B0%E6%8D%AE%E9%9B%86-%E9%AA%8C%E8%AF%81%E6%95%88%E6%9E%9Cprotocol/3695e16849dc148233fdbbaff3ec2c43_720-9844592.jpg" srcset="/img/loading.gif" lazyload alt="F1指标与置信度曲线">
+<figcaption aria-hidden="true">F1指标与置信度曲线</figcaption>
+</figure>
+<p>其中，置信度相当于检测任务中，检出对象的临界值。由上一节中precision和召回率的介绍，其实我们可以感知到，precision随着置信度的提升会增大，而召回率随着置信度的提升会减小。两者如何平衡，在F1指标与置信度曲线中已经给出。如上图我的训练结果表明，当置信度取0.265时，F1指标取到最大值0.97。因此，在上一部分，推理与验证时，我们就可以设置该网络的置信度取0.265。</p>
+
+                
+              </div>
+            
+            <hr/>
+            <div>
+              <div class="post-metas my-3">
+  
+  
+    <div class="post-meta">
+      <i class="iconfont icon-tags"></i>
+      
+        <a href="/tags/yolov8/" class="print-no-link">#yolov8</a>
+      
+        <a href="/tags/Experiment-protocol/" class="print-no-link">#Experiment protocol</a>
+      
+    </div>
+  
+</div>
+
+
+              
+  
+
+  <div class="license-box my-3">
+    <div class="license-title">
+      <div>yolov8搭建+训练自己数据集+验证效果protocol</div>
+      <div>https://silvia1999.github.io/2023/11/05/yolov8搭建-训练自己数据集-验证效果protocol/</div>
+    </div>
+    <div class="license-meta">
+      
+        <div class="license-meta-item">
+          <div>作者</div>
+          <div>Yifan</div>
+        </div>
+      
+      
+        <div class="license-meta-item license-meta-date">
+          <div>发布于</div>
+          <div>2023年11月5日</div>
+        </div>
+      
+      
+      
+        <div class="license-meta-item">
+          <div>许可协议</div>
+          <div>
+            
+              
+              
+                <a class="print-no-link" target="_blank" href="https://creativecommons.org/licenses/by/4.0/">
+                  <span class="hint--top hint--rounded" aria-label="BY - 署名">
+                    <i class="iconfont icon-by"></i>
+                  </span>
+                </a>
+              
+            
+          </div>
+        </div>
+      
+    </div>
+    <div class="license-icon iconfont"></div>
+  </div>
+
+
+
+              
+                <div class="post-prevnext my-3">
+                  <article class="post-prev col-6">
+                    
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                      <a href="/2023/10/27/hello-world/" title="Hello World">
+                        <span class="hidden-mobile">Hello World</span>
+                        <span class="visible-mobile">下一篇</span>
+                        <i class="iconfont icon-arrowright"></i>
+                      </a>
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+
+    <div class="side-col d-none d-lg-block col-lg-2">
+      
+  <aside class="sidebar" style="margin-left: -1rem">
+    <div id="toc">
+  <p class="toc-header">
+    <i class="iconfont icon-list"></i>
+    <span>目录</span>
+  </p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+
+
+  </aside>
+
+
+    </div>
+  </div>
+</div>
+
+
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+
+  
+
+
+  
+  
+
+
+
+
+
+
+
+
+
+    
+
+    
+      <a id="scroll-top-button" aria-label="TOP" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">搜索</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v" for="local-search-input">关键词</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+    
+
+    
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+  
+    <div class="footer-content">
+       <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+    </div>
+  
+  
+  
+  
+</div>
+
+  </footer>
+
+  <!-- Scripts -->
+  
+  <script  src="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://lib.baomitu.com/nprogress/0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://lib.baomitu.com/jquery/3.6.4/jquery.min.js" ></script>
+<script  src="https://lib.baomitu.com/twitter-bootstrap/4.6.1/js/bootstrap.min.js" ></script>
+<script  src="/js/events.js" ></script>
+<script  src="/js/plugins.js" ></script>
+
+
+  <script  src="https://lib.baomitu.com/typed.js/2.0.12/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var subtitle = document.getElementById('subtitle');
+      if (!subtitle || !typing) {
+        return;
+      }
+      var text = subtitle.getAttribute('data-typed-text');
+      
+        typing(text);
+      
+    })(window, document);
+  </script>
+
+
+
+
+  
+    <script  src="/js/img-lazyload.js" ></script>
+  
+
+
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/tocbot/4.20.1/tocbot.min.js', function() {
+    var toc = jQuery('#toc');
+    if (toc.length === 0 || !window.tocbot) { return; }
+    var boardCtn = jQuery('#board-ctn');
+    var boardTop = boardCtn.offset().top;
+
+    window.tocbot.init(Object.assign({
+      tocSelector     : '#toc-body',
+      contentSelector : '.markdown-body',
+      linkClass       : 'tocbot-link',
+      activeLinkClass : 'tocbot-active-link',
+      listClass       : 'tocbot-list',
+      isCollapsedClass: 'tocbot-is-collapsed',
+      collapsibleClass: 'tocbot-is-collapsible',
+      scrollSmooth    : true,
+      includeTitleTags: true,
+      headingsOffset  : -boardTop,
+    }, CONFIG.toc));
+    if (toc.find('.toc-list-item').length > 0) {
+      toc.css('visibility', 'visible');
+    }
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('tocbot' in window) {
+        tocbot.refresh();
+        var toc = jQuery('#toc');
+        if (toc.length === 0 || !tocbot) {
+          return;
+        }
+        if (toc.find('.toc-list-item').length > 0) {
+          toc.css('visibility', 'visible');
+        }
+      }
+    });
+  });
+</script>
+
+
+  <script src=https://lib.baomitu.com/clipboard.js/2.0.11/clipboard.min.js></script>
+
+  <script>Fluid.plugins.codeWidget();</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/anchor-js/4.3.1/anchor.min.js', function() {
+    window.anchors.options = {
+      placement: CONFIG.anchorjs.placement,
+      visible  : CONFIG.anchorjs.visible
+    };
+    if (CONFIG.anchorjs.icon) {
+      window.anchors.options.icon = CONFIG.anchorjs.icon;
+    }
+    var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+    var res = [];
+    for (var item of el) {
+      res.push('.markdown-body > ' + item.trim());
+    }
+    if (CONFIG.anchorjs.placement === 'left') {
+      window.anchors.options.class = 'anchorjs-link-left';
+    }
+    window.anchors.add(res.join(', '));
+
+    Fluid.events.registerRefreshCallback(function() {
+      if ('anchors' in window) {
+        anchors.removeAll();
+        var el = (CONFIG.anchorjs.element || 'h1,h2,h3,h4,h5,h6').split(',');
+        var res = [];
+        for (var item of el) {
+          res.push('.markdown-body > ' + item.trim());
+        }
+        if (CONFIG.anchorjs.placement === 'left') {
+          anchors.options.class = 'anchorjs-link-left';
+        }
+        anchors.add(res.join(', '));
+      }
+    });
+  });
+</script>
+
+
+  
+<script>
+  Fluid.utils.createScript('https://lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js', function() {
+    Fluid.plugins.fancyBox();
+  });
+</script>
+
+
+  <script>Fluid.plugins.imageCaption();</script>
+
+  
+      <script>
+        if (!window.MathJax) {
+          window.MathJax = {
+            tex    : {
+              inlineMath: { '[+]': [['$', '$']] }
+            },
+            loader : {
+              load: ['ui/lazy']
+            },
+            options: {
+              renderActions: {
+                insertedScript: [200, () => {
+                  document.querySelectorAll('mjx-container').forEach(node => {
+                    let target = node.parentNode;
+                    if (target.nodeName.toLowerCase() === 'li') {
+                      target.parentNode.classList.add('has-jax');
+                    }
+                  });
+                }, '', false]
+              }
+            }
+          };
+        } else {
+          MathJax.startup.document.state(0);
+          MathJax.texReset();
+          MathJax.typeset();
+          MathJax.typesetPromise();
+        }
+
+        Fluid.events.registerRefreshCallback(function() {
+          if ('MathJax' in window && MathJax.startup.document && typeof MathJax.startup.document.state === 'function') {
+            MathJax.startup.document.state(0);
+            MathJax.texReset();
+            MathJax.typeset();
+            MathJax.typesetPromise();
+          }
+        });
+      </script>
+    
+
+  <script  src="https://lib.baomitu.com/mathjax/3.2.2/es5/tex-mml-chtml.js" ></script>
+
+  <script  src="/js/local-search.js" ></script>
+
+
+
+
+
+<!-- 主题的启动项，将它保持在最底部 -->
+<!-- the boot of the theme, keep it at the bottom -->
+<script  src="/js/boot.js" ></script>
+
+
+  
+
+  <noscript>
+    <div class="noscript-warning">博客在允许 JavaScript 运行的环境下浏览效果更佳</div>
+  </noscript>
+</body>
+</html>
